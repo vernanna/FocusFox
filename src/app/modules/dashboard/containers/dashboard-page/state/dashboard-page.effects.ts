@@ -21,7 +21,7 @@ export class DashboardPageEffects {
           filter(([tab, blockedPages]) => tab.url != null && !blockedPages.some((blockedPage) => blockedPage.matches(tab.url!))),
           switchMap(([tab]) =>
             this.blockedPageRepository
-              .addBlockedPage(BlockedPage.create(tab.url!), action.blockAcrossInstallations)
+              .addBlockedPage(new BlockedPage(tab.url!), action.blockAcrossInstallations)
               .pipe(map(() => InfrastructureActions.reloadTabRequested({ tab })))
           )
         )

@@ -8,6 +8,10 @@ export class AppReducer {
   private static readonly reduceInternal = createReducer(
     initialState,
 
+    on(AppActions.activePageChanged, (state, action) => ({
+      ...state,
+      activePage: action.activePage,
+    })),
     on(AppActions.blockedPagesChanged, (state, action) => ({
       ...state,
       blockedPages: action.blockedPages,

@@ -1,1 +1,4 @@
-<app-page-info (blockCurrentPageRequested)="onBlockCurrentPageRequested($event)"></app-page-info>
+<app-page-info 
+    [activePageIsBlocked]="activePageIsBlocked$ | async" 
+    (blockCurrentPageRequested)="onBlockCurrentPageRequested($event)">
+</app-page-info>

@@ -6,4 +6,11 @@ export default class AppSelectors {
   private static readonly featureSelector = createFeatureSelector<AppState>(AppReducer.featureName)
 
   public static blockedPages = createSelector(AppSelectors.featureSelector, (state) => state.blockedPages)
+  public static activePage = createSelector(AppSelectors.featureSelector, (state) => state.activePage)
+  public static activePageIsBlocked = createSelector(
+    AppSelectors.featureSelector,
+    AppSelectors.blockedPages,
+    AppSelectors.activePage,
+    (_, blockedPages, activePage) => activePage?.url != null && blockedPages.some((blockedPage) => blockedPage.matches(activePage.url))
+  )
 }

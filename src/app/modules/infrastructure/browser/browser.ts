@@ -1,12 +1,25 @@
 import { Injectable } from '@angular/core'
-import { concatWith, filter, ignoreElements, map, mergeMap, Observable, switchMap, take } from 'rxjs'
+import {
+  concatWith,
+  distinctUntilChanged,
+  distinctUntilKeyChanged,
+  filter,
+  ignoreElements,
+  map,
+  mergeMap,
+  Observable,
+  startWith,
+  switchMap,
+  take,
+} from 'rxjs'
 import { from } from 'rxjs'
 import ContentScript from 'src/app/modules/content-scripts/content-script'
+import { ActivePage } from 'src/app/modules/domain/blocked-page copy'
 import Tab from 'src/app/modules/infrastructure/browser/entities/tab'
 import ActionClicked from 'src/app/modules/infrastructure/browser/events/action-clicked'
 import fromChromeEvent from 'src/app/modules/infrastructure/browser/events/from-chrome-event'
 import Installed from 'src/app/modules/infrastructure/browser/events/installed'
-import NavigationCompleted from 'src/app/modules/infrastructure/browser/events/tab-updated'
+import TabLoading from 'src/app/modules/infrastructure/browser/events/tab-loading'
 
 @Injectable()
 export default class Browser {
@@ -21,10 +34,10 @@ export default class Browser {
     )
   }
 
-  public get tabLoading(): Observable<NavigationCompleted> {
+  public get tabLoading(): Observable<TabLoading> {
     return fromChromeEvent(chrome.tabs.onUpdated).pipe(
       filter(([, tabChangeInfo]) => tabChangeInfo.status === 'loading'),
-      map(([tabId, , tab]) => new NavigationCompleted(new Tab(tabId, tab.url ?? null)))
+      map(([tabId, , tab]) => new TabLoading(new Tab(tabId, tab.url ?? null)))
     )
   }
 
@@ -57,6 +70,21 @@ export default class Browser {
         files: files,
       })
     ).pipe(ignoreElements())
+  }
+
+  public get activePage(): Observable<ActivePage> {
+    return this.activeTab.pipe(
+      switchMap((activeTab) =>
+        fromChromeEvent(chrome.tabs.onUpdated).pipe(
+          filter(([, , tab]) => tab.id === activeTab.id),
+          map(([, , tab]) => new Tab(tab.id!, tab.url ?? null)),
+          startWith(activeTab)
+        )
+      ),
+      filter((tab) => tab.url != null),
+      map((tab) => new ActivePage(tab.url!)),
+      distinctUntilChanged((previous, active) => previous.matches(active.url))
+    )
   }
 
   public get activeTab(): Observable<Tab> {
